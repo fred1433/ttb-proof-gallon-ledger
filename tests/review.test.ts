@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { toFixed } from '../src/decimal.ts';
 import { figures } from '../src/reports.ts';
-import { approve, correct, issues, latest, loadExtraction, syncDraft, isApprovedLatest } from '../src/review.ts';
+import { approve, approveAndBook, correct, issues, latest, loadExtraction, syncDraft, isApprovedLatest } from '../src/review.ts';
 import { bookRecords, buildMonth, evaluate, extraction, initialDraft, plant } from '../src/scenario.ts';
 
 const ctx = () => ({ ledger: bookRecords(), plant });
@@ -87,7 +87,43 @@ test('the extraction proposes values only: a record that tries to set an account
   assert.throws(() => correct(initialDraft(), { account: 'storage' }, 'reviewer', '2026-11-02'), /cannot be set/);
 });
 
-test('the recorded extraction says how it was made and what was seeded', () => {
-  assert.match(extraction.how, /calls no model/);
-  assert.match(extraction.seeded, /on purpose/);
+test('the simulated extraction says what it is and what was seeded', () => {
+  assert.match(extraction.how, /Simulated extraction with two seeded errors/);
+  assert.match(extraction.how, /No model runs on this page/);
+  assert.match(extraction.how, /illustrative/);
+  assert.match(extraction.seeded, /two errors/);
+});
+
+const codes = (changes: Record<string, string | null>) => issues(correct(fixed(), changes, 'reviewer', '2026-11-02'), ctx()).map((i) => `${i.field ?? ''}:${i.code}`);
+
+test('[APPROVED_VERSION_ONLY] the sheet total is checked as a figure, then against the rows: 950, text, a wrong WG total', () => {
+  assert.deepEqual(codes({ 'total.pg': '950' }), ['total.pg:format']);
+  assert.deepEqual(codes({ 'total.pg': 'ninety-five' }), ['total.pg:format']);
+  assert.deepEqual(codes({ 'total.pg': '95.1' }), ['total.pg:total']);
+  assert.deepEqual(codes({ 'total.wg': '99.9' }), ['total.wg:total']);
+  assert.deepEqual(codes({ 'total.wg': null }), ['total.wg:missing']);
+  const r = approve(correct(fixed(), { 'total.pg': '950' }, 'reviewer', '2026-11-02'), 'reviewer', '2026-11-02', ctx());
+  assert.ok(!r.ok);
+});
+
+test('[APPROVED_VERSION_ONLY] a sheet the ledger would refuse cannot be approved: repeated barrel, barrel out of stock, other client, existing lot', () => {
+  assert.ok(codes({ 'rows.1.serial': 'B-301' }).includes('rows.1.serial:repeated'));
+  assert.ok(codes({ 'rows.1.serial': 'A-201' }).includes('rows.1.serial:not-in-storage')); // dumped on October 9
+  assert.deepEqual(codes({ 'rows.1.serial': 'H-101' }), [':mixed-clients']);
+  assert.deepEqual(codes({ lot: 'A-1009' }), ['lot:lot-taken']);
+  // dated before A-201 was dumped: in stock that day, but the later dump makes the booking impossible
+  assert.deepEqual(codes({ date: '2026-10-05', 'rows.0.serial': 'A-201', 'rows.1.serial': 'A-202' }).map((c) => c.split(':')[1]), ['negative-position']);
+});
+
+test('[APPROVED_VERSION_ONLY] approval and booking are one step: if the ledger refuses, nothing is approved and nothing is booked', () => {
+  const l = bookRecords();
+  const n = l.entries.length;
+  const bad = correct(fixed(), { 'rows.1.serial': 'H-101' }, 'reviewer', '2026-11-02');
+  const r = approveAndBook(l, bad, 'reviewer', '2026-11-02', { plant });
+  assert.ok(!r.ok);
+  assert.equal(r.draft.approval, null);
+  assert.equal(l.entries.length, n);
+  const good = approveAndBook(l, fixed(), 'reviewer', '2026-11-02', { plant });
+  assert.ok(good.ok && good.posted);
+  assert.equal(l17(evaluate(l)), '226.4');
 });

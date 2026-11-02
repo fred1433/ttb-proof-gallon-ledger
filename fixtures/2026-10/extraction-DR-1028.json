@@ -1,11 +1,11 @@
 {
- "_note": "Frozen extraction of the fictional gauge sheet site/img/gauge-sheet-DR-1028.svg.",
+ "_note": "Simulated extraction of the fictional gauge sheet drawn in site/index.html. Written by hand in the shape an extraction step returns; confidence scores are illustrative.",
  "doc": "DR-1028",
  "kind": "dump-gauge",
  "image": "img/gauge-sheet-DR-1028.svg",
  "extractedOn": "2026-11-02",
- "how": "Recorded once, offline, in the form the extraction step returns; the page replays this record and calls no model.",
- "seeded": "Row B-302 is wrong on purpose: the proof is left blank and the proof gallons are the struck-out figure, so the review path can be walked through.",
+ "how": "Simulated extraction with two seeded errors, written by hand in the shape an extraction step returns; confidence scores are illustrative. No model runs on this page.",
+ "seeded": "The two errors are on row B-302: the proof is left blank and the proof gallons are the struck-out figure.",
  "fields": [
   {
    "key": "date",

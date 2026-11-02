@@ -4,7 +4,9 @@
 //   linked to the original) followed by a new entry [CORRECTION_BY_REVERSAL];
 // - the same source record version cannot be booked twice (idempotent imports);
 // - no plant account (storage, processing bulk, processing bottled) can go below zero
-//   for any barrel or lot.
+//   for any barrel or lot;
+// - entries handed out are deep-frozen copies: callers cannot change the ledger's own records
+//   (there is no database here, so this is the in-memory guarantee, nothing more).
 import { type Dec, add, eq, isNeg, isZero, neg, roundHalfUp, sum, zero, raw } from './decimal.ts';
 import { type Account, type Entry, type NewEntry, type Posting, isPlantAccount } from './model.ts';
 
@@ -31,7 +33,17 @@ export class Ledger {
   #positions = new Map<string, Dec>();
 
   get entries(): readonly Entry[] {
-    return this.#entries;
+    return Object.freeze(this.#entries.slice());
+  }
+
+  /** An independent copy, for trial bookings that must not touch this ledger. */
+  clone(): Ledger {
+    const l = new Ledger();
+    for (const e of this.#entries) {
+      const { id: _id, ...rest } = e;
+      l.post(rest);
+    }
+    return l;
   }
 
   get(id: string): Entry | undefined {
@@ -74,7 +86,7 @@ export class Ledger {
       if (isNeg(v)) throw new LedgerError('negative-position', `${input.doc}: ${pk.split('|').slice(1).join(' ')} would go to ${raw(v)} PG`);
     }
 
-    const entry: Entry = { ...input, id: `E${String(this.#entries.length + 1).padStart(3, '0')}` };
+    const entry: Entry = deepFreeze(structuredClone({ ...input, id: `E${String(this.#entries.length + 1).padStart(3, '0')}` }));
     this.#entries.push(entry);
     this.#keys.add(k);
     for (const [pk, v] of next) this.#positions.set(pk, v);
@@ -135,6 +147,14 @@ export class Ledger {
     }
     return [...m.values()].filter((x) => !isZero(x.pg));
   }
+}
+
+function deepFreeze<T>(o: T): T {
+  if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const v of Object.values(o as object)) deepFreeze(v);
+  }
+  return o;
 }
 
 /** Stable short fingerprint of a set of entries (FNV-1a over ids, doc versions and postings):

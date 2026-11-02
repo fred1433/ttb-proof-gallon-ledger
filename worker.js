@@ -1,5 +1,5 @@
-// Gabarit : remplacer ttb-ledger-review. Sert site/ sous https://theaipipe.com/demos/ttb-ledger-review/ (static files only).
-// The route is more specific than the galerie-presell route theaipipe.com/demos/*, so it wins.
+// Serves the static files in site/ under https://theaipipe.com/demos/ttb-ledger-review/.
+// Deployed by hand with `npx wrangler deploy`; CI does not deploy.
 const BASE = '/demos/ttb-ledger-review';
 export default {
   async fetch(request, env) {

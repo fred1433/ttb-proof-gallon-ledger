@@ -3,7 +3,7 @@
 export * from '../src/index.ts';
 import {
   type Contribution, type Draft, type Entry, type Line, type Month, type Statement, type Dec,
-  Ledger, RULES, approve, bookRecords, correct, evaluate, extraction, figures, initialDraft, isApprovedLatest,
+  Ledger, RULES, approveAndBook, bookRecords, correct, evaluate, extraction, figures, initialDraft, isApprovedLatest,
   issues, latest, records, syncDraft, plant, toFixed, sum, raw, caseGauge, STORAGE_COLUMNS,
 } from '../src/index.ts';
 
@@ -29,14 +29,17 @@ const S = {
   change: null as null | { title: string; before: Record<string, string>; after: Record<string, string>; stBefore: Statement[] },
   versions: [] as string[], // fingerprints of the drafts shown so far
   message: '' as string,
+  allOpen: false,
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in the viewer's own time zone
 const esc = (s: unknown) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const $ = (id: string) => document.getElementById(id)!;
 const clientName = (id: string) => plant.clients.find((c) => c.id === id)?.name ?? id;
 const fmt = (l: Line) => toFixed(l.value, l.unit === 'PG' ? 1 : 0);
 const pg1 = (d: Dec) => toFixed(d, 1);
+/** Keep record ids and barrel serials such as B-301 on one line. */
+const nw = (s: string) => `<span class="nw">${esc(s)}</span>`;
 const signed = (d: Dec, places = 1) => (d.u > 0n ? '+' : '') + toFixed(d, places);
 const sentence = (s: string) => {
   const t = s.toLowerCase().replace(/ - /g, ', ');
@@ -108,14 +111,19 @@ function renderStatus() {
   const failing = m.checks.filter((c) => !c.pass);
   const waiting = isApprovedLatest(S.draft) ? 0 : 1;
   const v = S.versions.indexOf(m.reports.fingerprint) + 1;
+  const headline = failing.length
+    ? waiting
+      ? `<span class="lead-line"><span class="dot wait"></span><b>One unreviewed record makes ${failing.length} checks fail.</b> <button class="link" data-act="tab" data-tab="review">Correct it and see what changes.</button></span>`
+      : `<span class="lead-line"><span class="dot wait"></span><b>${failing.length} of ${m.checks.length} checks fail.</b></span>`
+    : `<span class="lead-line"><span class="dot"></span><b>All ${m.checks.length} checks pass.</b> Ready for your reviewer; nothing is filed.</span>`;
   const parts = [
-    `<span title="Fingerprint of the entries this version was built from: ${m.reports.fingerprint}"><span class="dot ${failing.length ? 'wait' : ''}"></span><b>October 2026 draft, version ${v}</b>, built from ${m.reports.entries.length} ledger entries</span>`,
-    failing.length
-      ? `<span><b>${failing.length} of ${m.checks.length} checks</b> need attention</span>`
-      : `<span>All ${m.checks.length} checks pass. Ready for your reviewer; nothing is filed.</span>`,
+    headline,
+    `<span title="Fingerprint of the entries this version was built from: ${m.reports.fingerprint}">October 2026 draft, version ${v}, built from ${m.reports.entries.length} ledger entries</span>`,
+    `<a href="${REPO}/blob/main/fixtures/2026-10/worksheet.md">Independent calculation</a>`,
   ];
-  if (waiting) parts.push(`<span>1 record waiting for review: DR-1028 <button class="link" data-act="tab" data-tab="review">Review it</button></span>`);
   $('status').innerHTML = parts.join('');
+  const thumb = document.getElementById('thumb-state');
+  if (thumb) thumb.textContent = waiting ? 'DR-1028, waiting for review' : `DR-1028, version ${S.draft.approval!.v} approved`;
 }
 
 function figButton(key: string, l: Line) {
@@ -232,7 +240,7 @@ function entryPanel(id: string): string {
 function tracePanel(): string {
   if (S.entry) return entryPanel(S.entry);
   const l = S.month.reports.line(S.selected);
-  const colName = l.form === '5110.11' ? STORAGE_COLUMNS[l.col] : l.part === 'I' ? 'Spirits' : l.part === 'II' ? 'Bottled' : l.unit;
+  const colName = l.form === '5110.11' ? STORAGE_COLUMNS[l.col] : l.part === 'I' ? 'Spirits' : l.part === 'II' ? (l.col === 'c' ? 'Packaged' : 'Bottled') : l.unit === 'whole PG' ? 'Whole proof gallons' : 'Whole wine gallons';
   const rule = l.rule ? RULES.find((x) => x.id === l.rule) : undefined;
   let html = `<h3>${l.form} line ${esc(l.line)}, column (${esc(l.col)})</h3>
     <p class="sub">${esc(sentence(l.label))}. ${esc(colName ?? '')}.</p>
@@ -256,24 +264,24 @@ function tracePanel(): string {
   const balance = cs[0]!.kind === 'balance';
   html += `<p class="note">${balance ? `Positions ${l.line === '1' || l.line === '27' ? 'on October 1' : 'on October 31'}, from the ledger. Open one for its history.` : `${cs.length} posting${cs.length > 1 ? 's' : ''} from ${new Set(cs.map((c) => c.entryId)).size} ${new Set(cs.map((c) => c.entryId)).size > 1 ? 'entries' : 'entry'}. Open one for the entry and its source record.`}</p>`;
   html += `<ul class="contribs">${cs.map((c, i) => contribRow(c, i, l)).join('')}</ul>`;
-  html += `<p class="note">Sum: ${cs.map((c) => toFixed(c.pg, l.unit === 'PG' ? 1 : 2)).join(' + ').replace(/\+ -/g, '- ')} = ${toFixed(sum(cs.map((c) => c.pg)), l.unit === 'PG' ? 1 : 2)}${l.unrounded ? `, ${fmt(l)} whole` : ''}.</p>`;
+  html += `<p class="note">Sum: ${cs.map((c) => toFixed(c.pg, l.unit === 'whole WG' ? 2 : 1)).join(' + ').replace(/\+ -/g, '- ')} = ${toFixed(sum(cs.map((c) => c.pg)), l.unit === 'whole WG' ? 2 : 1)}${l.unrounded ? `, ${fmt(l)} whole` : ''}.</p>`;
   return html;
 }
 
 function contribRow(c: Contribution, i: number, l: Line): string {
   const id = `${S.selected}#${i}`;
   const open = S.open === id;
-  const places = l.unit === 'PG' ? 1 : 2;
+  const places = l.unit === 'whole WG' ? 2 : 1;
   const what = c.kind === 'balance'
-    ? `${c.pkg ? `Barrel ${c.pkg}` : `Lot ${c.lot}`}, ${esc(clientName(c.client))}`
-    : `${esc(c.doc)}${c.docVersion > 1 ? ` v${c.docVersion}` : ''}, ${c.pkg ? `barrel ${esc(c.pkg)}` : `lot ${esc(c.lot)}`}`;
+    ? `${c.pkg ? `Barrel ${nw(c.pkg)}` : `Lot ${nw(c.lot)}`}, ${esc(clientName(c.client))}`
+    : `${nw(c.doc)}${c.docVersion > 1 ? ` v${c.docVersion}` : ''}, ${c.pkg ? `barrel ${nw(c.pkg)}` : `lot ${nw(c.lot)}`}`;
   const meta = c.kind === 'balance'
     ? `entries ${esc(c.entryId.split(' ').join(', '))}`
     : `${shortDate(c.date)}, ${esc(clientName(c.client))}, entry ${esc(c.entryId)}${c.reversal ? ', reversal' : ''}${c.reversed ? ', reversed' : ''}`;
   const struck = c.reversed || c.reversal;
   return `<li class="${open ? 'open' : ''} ${struck ? 'struck' : ''}">
     <button class="row" data-act="open" data-id="${esc(id)}" aria-expanded="${open}">
-      <span class="what">${what}</span><span class="amt ${c.pg.u < 0n ? 'neg' : ''}">${l.unit === 'PG' ? signed(c.pg, places) : toFixed(c.pg, places)}</span><span class="meta">${meta}</span>
+      <span class="what">${what}</span><span class="amt ${c.pg.u < 0n ? 'neg' : ''}">${l.unit !== 'whole WG' ? signed(c.pg, places) : toFixed(c.pg, places)}</span><span class="meta">${meta}</span>
     </button>${open ? `<div class="record">${c.kind === 'balance' ? positionHistory(c) : entryDetail(c.entryId)}</div>` : ''}</li>`;
 }
 
@@ -282,7 +290,7 @@ function positionHistory(c: Contribution): string {
   for (const e of S.ledger.entries) {
     for (const p of e.postings) {
       if ((c.pkg && p.pkg === c.pkg && (p.account === 'storage' || p.account === 'processing.bulk')) || (!c.pkg && p.lot === c.lot && p.account.startsWith('processing'))) {
-        rows.push(`<tr><td>${esc(e.id)} ${esc(e.doc)}</td><td>${shortDate(e.date)}</td><td>${esc(accountName(p.account))}</td><td>${signed(p.pg)}</td></tr>`);
+        rows.push(`<tr><td><button class="eref" data-act="entry" data-id="${esc(e.id)}">${esc(e.id)} ${nw(e.doc)}</button></td><td>${shortDate(e.date)}</td><td>${esc(accountName(p.account))}</td><td>${signed(p.pg)}</td></tr>`);
       }
     }
   }
@@ -373,6 +381,10 @@ const fieldLabel = (k: string, values: Record<string, string | null>) => {
   return `${serial}, ${({ serial: 'barrel serial', proof: 'proof', wg: 'wine gallons', pg: 'proof gallons' } as Record<string, string>)[m[2]!]}`;
 };
 
+function readableDetail(detail: string, values: Record<string, string | null>): string {
+  return detail.replace(/(rows\.\d\.\w+|date|lot|tank|gauger|unit\.\w+|total\.\w+): /g, (_m, k: string) => `${fieldLabel(k, values)}: `).replace(/ -> /g, ' to ');
+}
+
 function reviewPanel(): string {
   const d = S.draft;
   const cur = latest(d);
@@ -395,7 +407,7 @@ function reviewPanel(): string {
       const [x, y, w, h] = f.box;
       return `<li class="fix"><div class="crop"><svg viewBox="${x} ${y} ${w} ${h}" role="img" aria-label="The sheet at ${esc(fieldLabel(f.key, cur.values))}"><use href="#gauge-sheet" x="0" y="0" width="760" height="520"/></svg></div>
         <div><label for="f-${esc(f.key)}">${esc(fieldLabel(f.key, cur.values))}</label>
-        <div class="ex">Extracted: ${f.value === null ? 'blank' : esc(f.value)}${f.confidence !== undefined ? `, confidence ${f.confidence}` : ''}${f.note ? `. ${esc(f.note)}` : ''}</div>
+        <div class="ex">Extracted: ${f.value === null ? 'blank' : esc(f.value)}${f.confidence !== undefined ? `, illustrative confidence ${f.confidence}` : ''}${f.note ? `. ${esc(f.note)}` : ''}</div>
         <input id="f-${esc(f.key)}" data-key="${esc(f.key)}" value="${esc(val)}" inputmode="${/rows|total/.test(f.key) && !/serial/.test(f.key) ? 'decimal' : 'text'}" autocomplete="off" ${editable ? '' : 'disabled'}></div></li>`;
     }).join('')}</ul>`;
   if (!approved) {
@@ -416,8 +428,12 @@ function reviewPanel(): string {
       return `<li><button data-act="sel" data-key="${esc(k)}"><span>${esc(form)} line ${esc(line)} (${esc(col)}): ${esc(sentence(S.month.reports.line(k).label))}</span><span class="ba"><s>${esc(S.change!.before[k])}</s>${esc(S.change!.after[k])}</span></button></li>`;
     }).join('')}</ul>`;
   }
-  html += `<details class="allfields"><summary>All ${extraction.fields.length} fields, extracted and current</summary><div class="record"><table><tr><th>Field</th><th>Extracted</th><th>Version ${cur.v}</th></tr>${extraction.fields.map((f) => `<tr><td>${esc(fieldLabel(f.key, cur.values))}</td><td>${esc(f.value ?? 'blank')}</td><td>${esc(cur.values[f.key] ?? 'blank')}</td></tr>`).join('')}</table></div></details>`;
-  html += `<h4 style="font:600 13px var(--sans);margin:0 0 6px">History</h4><ul class="history">${d.history.map((h) => `<li>${longDate(h.at)}: ${esc(h.action)}, version ${h.v}, by ${esc(h.by)}${h.detail ? ` (${esc(h.detail)})` : ''}</li>`).join('')}</ul>`;
+  const lookKeys = new Set(look.map((f) => f.key));
+  const cell = (k: string) => lookKeys.has(k) || !editable
+    ? esc(cur.values[k] ?? 'blank') + (lookKeys.has(k) && editable ? ' <span class="note">(above)</span>' : '')
+    : `<input class="small" data-key="${esc(k)}" aria-label="${esc(fieldLabel(k, cur.values))}" value="${esc(S.pending[k] ?? cur.values[k] ?? '')}" autocomplete="off">`;
+  html += `<details class="allfields"${S.allOpen ? ' open' : ''}><summary data-act="allfields">All ${extraction.fields.length} fields: extracted, and version ${cur.v}${editable ? ', editable' : ''}</summary><div class="record"><table><tr><th>Field</th><th>Extracted</th><th>Version ${cur.v}</th></tr>${extraction.fields.map((f) => `<tr><td>${esc(fieldLabel(f.key, cur.values))}</td><td>${esc(f.value ?? 'blank')}</td><td>${cell(f.key)}</td></tr>`).join('')}</table></div></details>`;
+  html += `<h4 style="font:600 13px var(--sans);margin:0 0 6px">History</h4><ul class="history">${d.history.map((h) => `<li>${longDate(h.at)}: ${esc(h.action)}, version ${h.v}, by ${esc(h.by)}${h.detail ? ` (${esc(readableDetail(h.detail, cur.values))})` : ''}</li>`).join('')}</ul>`;
   return html;
 }
 
@@ -431,14 +447,15 @@ function statementsPanel(): string {
     const bits: string[] = [];
     if (r.cases !== undefined && r.cases !== 0) bits.push(`${r.cases} cases`);
     if (r.wg && r.key === 'bottled') bits.push(`${toFixed(r.wg, 2)} WG`);
-    if (r.barrels && r.barrels.length && r.pg.u !== 0n) bits.push(r.barrels.join(', '));
-    return bits.length ? `<span class="x">${esc(bits.join('; '))}</span>` : '';
+    const parts = bits.map(esc);
+    if (r.barrels && r.barrels.length && r.pg.u !== 0n) parts.push(r.barrels.map(nw).join(', '));
+    return parts.length ? `<span class="x">${parts.join('; ')}</span>` : '';
   };
   return `<div class="seg" role="group" aria-label="Client">${S.month.statements.map((s) => `<button data-act="client" data-client="${s.client}" aria-pressed="${s.client === S.client}">${esc(s.name)}</button>`).join('')}</div>
     <h3>${esc(st.name)}, October 2026</h3>
     <p class="sub">${esc(st.note)}</p>
     ${stamp ? `<p>${stamp}</p>` : ''}
-    <table class="stmt">${st.rows.map((r) => `<tr class="${r.pg.u === 0n ? 'zero' : ''} ${changedKeys.has(r.key) ? 'chg' : ''}"><td>${esc(r.label)}${extra(r)}</td><td class="v">${pg1(r.pg)}<span class="unit">PG</span>${changedKeys.has(r.key) && prev ? `<span class="x"><s>${pg1(prev.rows.find((x) => x.key === r.key)!.pg)}</s></span>` : ''}</td></tr>`).join('')}</table>
+    <table class="stmt">${st.rows.map((r) => `<tr class="${changedKeys.has(r.key) ? 'chg' : r.pg.u === 0n ? 'zero' : ''}"><td>${esc(r.label)}${extra(r)}</td><td class="v">${pg1(r.pg)}<span class="unit">PG</span>${changedKeys.has(r.key) && prev ? `<span class="x"><s>${pg1(prev.rows.find((x) => x.key === r.key)!.pg)}</s></span>` : ''}</td></tr>`).join('')}</table>
     <p class="note">${esc(plant.ownership)} Each figure filters the same postings the draft is built from; the three statements add up to the plant lines (see the checks below).</p>`;
 }
 
@@ -476,7 +493,11 @@ function onClick(ev: MouseEvent) {
   } else if (act === 'tab') {
     S.tab = t.dataset.tab as Tab;
     renderInspector();
-    if (t.closest('#status') && window.matchMedia('(max-width: 1080px)').matches) $('inspector').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (t.closest('.intro')) {
+      if (t.dataset.client) S.client = t.dataset.client;
+      renderInspector();
+      (window.matchMedia('(max-width: 1080px)').matches ? $('inspector') : $('status')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (t.closest('#status') && window.matchMedia('(max-width: 1080px)').matches) $('inspector').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else if (act === 'client') {
     S.client = t.dataset.client!;
     renderInspector();
@@ -496,15 +517,17 @@ function onClick(ev: MouseEvent) {
     } else S.message = `Saved as version ${latest(S.draft).v}.`;
     render();
   } else if (act === 'approve') {
-    const r = approve(S.draft, REVIEWER, today(), { ledger: S.ledger, plant });
-    if (!r.ok) { S.message = 'Approval blocked: see the list above.'; renderInspector(); return; }
+    const r = approveAndBook(S.ledger, S.draft, REVIEWER, today(), { plant });
+    if (!r.ok) { S.message = `Not approved, nothing booked. ${r.issues.map((i) => i.message).join(' ')}`; renderInspector(); return; }
     S.draft = r.draft;
     if (r.already) { S.message = 'Already approved. Nothing booked twice.'; renderInspector(); return; }
-    const s = syncDraft(S.ledger, S.draft, { plant, recordedOn: today() });
+    const s = { posted: r.posted };
     recompute(`DR-1028 version ${S.draft.approval!.v} approved`);
     const e = S.ledger.get(s.posted!)!;
     S.message = `Booked as entry ${e.id}, dated ${longDate(e.date)} (the dump), booked ${longDate(e.recordedOn)}: it counts in October.`;
     render();
+  } else if (act === 'allfields') {
+    S.allOpen = !(t.parentElement as HTMLDetailsElement).open;
   } else if (act === 'edit') {
     S.editing = true;
     S.message = 'Change a value and save it as a new version: the approval is withdrawn and the entry reversed.';

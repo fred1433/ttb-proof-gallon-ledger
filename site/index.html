@@ -24,10 +24,18 @@
   <div class="wrap">
     <header class="intro">
       <h1>One bottling month, from barrel to draft report</h1>
-      <div class="cols2">
-      <p>A working proof-gallon ledger for an invented Louisville bottling plant: two private-label clients and a house label, four barrels received in bond, two dumps, a 90 proof bottling run, and bottles leaving tax determined. The draft 5110.11 and 5110.28 below are computed in your browser from the ledger's entries.</p>
-      <p>Click any figure to see what it is made of. One gauge sheet is still waiting for review: until someone approves it, it stays out of every line.</p>
+      <div class="intro-text">
+        <p>A proof-gallon ledger closes one invented month at a Louisville bottling plant (two private-label clients, a house label, a 90 proof bottling run), and the draft 5110.11 and 5110.28 below are computed in your browser from its entries. One handwritten gauge sheet is still unreviewed, so it stays out of every line until someone approves it.</p>
+        <ol class="gestures">
+          <li><button data-act="tab" data-tab="trace">Trace a figure</button> to its postings and source records</li>
+          <li><button data-act="tab" data-tab="review">Review and approve DR-1028</button>, then see which lines change</li>
+          <li><button data-act="tab" data-tab="statements">Open the client statements</button>, built from the same postings</li>
+        </ol>
       </div>
+      <button class="thumb" data-act="tab" data-tab="review" aria-label="Open the review of gauge sheet DR-1028">
+        <svg viewBox="0 0 760 520" aria-hidden="true"><use href="#gauge-sheet" x="0" y="0" width="760" height="520"/></svg>
+        <span id="thumb-state">DR-1028, waiting for review</span>
+      </button>
     </header>
 
     <section class="bench" aria-label="October 2026 draft review worksheet">
@@ -79,9 +87,15 @@
           </dl>
         </div>
         <div class="milestone">
+          <h3 class="side">Four questions, four tests</h3>
+          <ul class="answers">
+            <li><b>Transactions and reconciliation.</b> Every entry sums to zero, and the draft is checked against a month worked out by hand. <a href="https://github.com/fred1433/ttb-proof-gallon-ledger/blob/main/tests/month.test.ts">month.test.ts</a></li>
+            <li><b>Several clients under one bottler.</b> Statements filter the same postings; one client's operation leaves the others unchanged. <a href="https://github.com/fred1433/ttb-proof-gallon-ledger/blob/main/tests/month.test.ts">month.test.ts</a></li>
+            <li><b>Migration.</b> Quoted cells, conflicting rows and barrels already in stock are caught before anything is booked. <a href="https://github.com/fred1433/ttb-proof-gallon-ledger/blob/main/tests/migration.test.ts">migration.test.ts</a></li>
+            <li><b>Extracted data under review.</b> Only the approved version is booked, in one step with the approval; an edit withdraws it. <a href="https://github.com/fred1433/ttb-proof-gallon-ledger/blob/main/tests/review.test.ts">review.test.ts</a></li>
+          </ul>
           <h3 class="side">A first milestone</h3>
           <p>One representative month of yours, agreed with your TTB reviewer: the source records, the figures expected on each line, the record-to-line mapping and the acceptance criteria, then this engine passing them.</p>
-          <p class="note">The README answers how transactions, client separation, migration and AI-extracted entries are handled, each pointing to the test that proves it.</p>
         </div>
       </div>
     </div>
@@ -90,7 +104,7 @@
 
 <footer>
   <div class="wrap">
-    <p>Built by Frederic de Lavenne de Choulot, The AI Pipe. Everything here is fictional: the plant, the distilleries, the clients and every record. Line numbers and labels come from TTB F 5110.11 (01/2009) and TTB F 5110.28 (03/2016); the rules were read on eCFR, ttb.gov and the Pay.gov form help on November 2, 2026. The gauge sheet extraction was recorded offline and is replayed here; no AI model runs on this page.</p>
+    <p>Built by Frederic de Lavenne de Choulot, The AI Pipe. Everything here is fictional: the plant, the distilleries, the clients and every record. Line numbers and labels come from TTB F 5110.11 (01/2009) and TTB F 5110.28 (03/2016); the rules were read on eCFR, ttb.gov and the Pay.gov form help on November 2, 2026. The gauge sheet extraction is simulated, with two seeded errors, and its confidence scores are illustrative. No model runs on this page.</p>
     <p class="cal">Walk through it together: <a href="https://cal.theaipipe.com">cal.theaipipe.com</a>, 15 minutes.</p>
   </div>
 </footer>

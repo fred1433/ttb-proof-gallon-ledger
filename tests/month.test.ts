@@ -177,3 +177,20 @@ test('figures stay the same when computed twice (deterministic)', () => {
   assert.deepEqual(figures(buildMonth().reports), figures(buildMonth().reports));
   assert.equal(dec('1').s, 0);
 });
+
+test('[RECEIPT_RECORD_FIELDS] a transfer shipped at 214.0 PG, received and booked at 204.0, needs review and names both records', () => {
+  const m = buildMonth(approvedDraft());
+  const t0 = records.transfers[0]!;
+  const shipped = { ...t0.transfer, packages: t0.transfer.packages.map((p, i) => (i === 0 ? { ...p, pg: '61.4' } : p)) };
+  const c = runChecks({ ...m, plant, prior, register, transfers: [{ transfer: shipped, receipt: t0.receipt }], count: monthEndCount, expected });
+  const k = c.find((x) => x.id === 'transfer-TR-0457')!;
+  assert.ok(!k.pass);
+  assert.deepEqual(k.toExamine, ['TR-0457', 'RC-1006']);
+  assert.match(k.detail, /214\.0 PG shipped, 204\.0 PG received, 204\.0 PG booked/);
+});
+
+test('[CHECK_L9_EQ_L28] line 9 is compared with line 28 (b) plus line 28 (c)', () => {
+  const m = buildMonth(approvedDraft());
+  assert.equal(toFixed(m.reports.line('5110.28:28:c').value, 1), '0.0');
+  assert.equal(m.checks.find((c) => c.id === '5110.28-l9-l28')!.detail, '130.5 / 130.5 + 0.0');
+});

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fc from 'fast-check';
 import { dec, neg, eq, isZero, sum, raw, roundHalfUp, type Dec } from '../src/decimal.ts';
 import { Ledger, LedgerError } from '../src/ledger.ts';
-import { type NewEntry, type Posting } from '../src/model.ts';
+import { type Entry, type NewEntry, type Posting } from '../src/model.ts';
 import { receiptEntry } from '../src/events.ts';
 import { plant, records, bookRecords } from '../src/scenario.ts';
 
@@ -88,4 +88,13 @@ test('[CORRECTION_BY_REVERSAL] property: any sequence balances, and reversing it
     }
     return true;
   }), { numRuns: 300 });
+});
+
+test('entries handed out are frozen copies: a caller cannot rewrite the ledger', () => {
+  const l = bookRecords();
+  const e = l.entries[1]!;
+  assert.throws(() => { (e.postings[0] as { pg: unknown }).pg = dec('999.9'); }, TypeError);
+  assert.throws(() => { (l.entries as Entry[]).push(e as Entry); }, TypeError);
+  assert.equal(raw(l.entries[1]!.postings[0]!.pg), raw(e.postings[0]!.pg));
+  assert.deepEqual(l.clone().entries.map((x) => x.id), l.entries.map((x) => x.id));
 });

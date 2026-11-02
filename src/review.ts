@@ -10,6 +10,7 @@ import { gaugeConsistent } from './units.ts';
 import { type Plant } from './model.ts';
 import { Ledger } from './ledger.ts';
 import { type DumpRecord, dumpEntry } from './events.ts';
+import { LedgerError } from './ledger.ts';
 
 export type ExtractedField = { key: string; value: string | null; confidence?: number; box: [number, number, number, number]; note?: string };
 export type ExtractionRecord = {
@@ -84,8 +85,12 @@ export function issues(d: Draft, ctx: { ledger: Ledger; plant: Plant }): Issue[]
   const n = rowCount(v);
   if (n === 0) out.push({ code: 'no-rows', message: 'No barrel rows' });
   const pgs: Dec[] = [];
+  const wgs: Dec[] = [];
+  const seen = new Set<string>();
   for (let i = 0; i < n; i++) {
     const serial = v[`rows.${i}.serial`];
+    if (serial && seen.has(serial)) out.push({ field: `rows.${i}.serial`, code: 'repeated', message: `${serial} appears on two rows` });
+    if (serial) seen.add(serial);
     for (const k of ROW_KEYS) req(`rows.${i}.${k}`, `${k === 'serial' ? 'Serial' : k === 'proof' ? 'Proof' : k === 'wg' ? 'Wine gallons' : 'Proof gallons'} for row ${i + 1}${serial ? ` (${serial})` : ''}`);
     const [proof, wg, pg] = (['proof', 'wg', 'pg'] as const).map((k) => v[`rows.${i}.${k}`]);
     for (const [k, x] of [['proof', proof], ['wg', wg], ['pg', pg]] as const) {
@@ -95,6 +100,7 @@ export function issues(d: Draft, ctx: { ledger: Ledger; plant: Plant }): Issue[]
       const c = gaugeConsistent(dec(wg), dec(proof), dec(pg));
       if (!c.ok) out.push({ field: `rows.${i}.pg`, code: 'inconsistent', message: `${serial}: ${pg} PG does not fit ${wg} WG at ${proof} proof (about ${toFixed(roundHalfUp(c.expected, 2), 2)} PG)` });
       pgs.push(dec(pg));
+      wgs.push(dec(wg));
     }
     if (serial && v.date) {
       const pos = ctx.ledger.positions('storage', { operator: ctx.plant.operator, through: v.date }).find((x) => x.pkg === serial);
@@ -102,11 +108,46 @@ export function issues(d: Draft, ctx: { ledger: Ledger; plant: Plant }): Issue[]
       else if (pg && NUM.test(pg) && cmp(dec(pg), pos.pg) > 0) out.push({ field: `rows.${i}.pg`, code: 'gain', message: `${serial}: ${pg} PG is more than the ${raw(pos.pg)} PG carried in storage` });
     }
   }
-  const tot = v['total.pg'];
-  if (tot && NUM.test(tot) && pgs.length === n && n > 0 && !eq(sum(pgs), dec(tot))) {
-    out.push({ field: 'total.pg', code: 'total', message: `Rows add up to ${toFixed(sum(pgs), 1)} PG; the sheet's total says ${tot} PG` });
+  req('total.wg', 'Sheet total, wine gallons');
+  // The sheet's own totals are checked twice: as figures, then against the rows.
+  for (const [k, unit, rows] of [['total.pg', 'PG', pgs], ['total.wg', 'WG', wgs]] as const) {
+    const tot = v[k];
+    if (tot === null || tot === undefined || tot.trim() === '') continue;
+    if (!NUM.test(tot)) {
+      out.push({ field: k, code: 'format', message: `Sheet total "${tot}" is not a figure to one decimal` });
+      continue;
+    }
+    if (rows.length === n && n > 0 && !eq(sum(rows), dec(tot))) {
+      out.push({ field: k, code: 'total', message: `Rows add up to ${toFixed(sum(rows), 1)} ${unit}; the sheet's total says ${tot} ${unit}` });
+    }
   }
+  if (out.length === 0) out.push(...trialBooking(d, ctx));
   return out;
+}
+
+/** The record the values describe, approved or not. */
+function recordFromValues(doc: string, v: Record<string, string | null>): DumpRecord {
+  const n = rowCount(v);
+  return {
+    id: doc, date: v.date!, lot: v.lot!, tank: v.tank!, gauger: v.gauger!,
+    barrels: Array.from({ length: n }, (_, i) => ({ serial: v[`rows.${i}.serial`]!, proof: v[`rows.${i}.proof`]!, wg: v[`rows.${i}.wg`]!, pg: v[`rows.${i}.pg`]! })),
+  };
+}
+
+/** Book the version on a copy of the ledger. Whatever the ledger would refuse (a barrel out of
+ *  stock or dumped later, barrels of two clients, a lot that already exists) blocks approval. */
+function trialBooking(d: Draft, ctx: { ledger: Ledger; plant: Plant }): Issue[] {
+  const rec = recordFromValues(d.doc, latest(d).values);
+  const taken = ctx.ledger.entries.find((e) => e.doc !== d.doc && e.postings.some((p) => p.lot === rec.lot));
+  if (taken) return [{ field: 'lot', code: 'lot-taken', message: `Lot ${rec.lot} already exists, from ${taken.doc}` }];
+  try {
+    const trial = ctx.ledger.clone();
+    for (const e of trial.entries) if (e.doc === d.doc && trial.isLive(e)) trial.reverse(e.id, { recordedOn: rec.date, reason: 'trial' });
+    trial.post(dumpEntry(rec, trial, { plant: ctx.plant, recordedOn: rec.date, origin: 'reviewed-extraction', docVersion: latest(d).v }));
+    return [];
+  } catch (err) {
+    return [{ code: err instanceof LedgerError ? err.code : 'cannot-book', message: `The ledger would refuse this version: ${(err as Error).message}` }];
+  }
 }
 
 
@@ -136,12 +177,7 @@ export function approve(d: Draft, by: string, at: string, ctx: { ledger: Ledger;
 /** The dump record the approved version describes, or null if the latest version is not approved. */
 export function approvedRecord(d: Draft): DumpRecord | null {
   if (!isApprovedLatest(d)) return null;
-  const v = latest(d).values;
-  const n = rowCount(v);
-  return {
-    id: d.doc, date: v.date!, lot: v.lot!, tank: v.tank!, gauger: v.gauger!,
-    barrels: Array.from({ length: n }, (_, i) => ({ serial: v[`rows.${i}.serial`]!, proof: v[`rows.${i}.proof`]!, wg: v[`rows.${i}.wg`]!, pg: v[`rows.${i}.pg`]! })),
-  };
+  return recordFromValues(d.doc, latest(d).values);
 }
 
 /** Bring a persistent ledger in line with the draft: post the approved latest version once;
@@ -159,4 +195,20 @@ export function syncDraft(ledger: Ledger, d: Draft, ctx: { plant: Plant; recorde
   if (ledger.entries.some((e) => e.doc === d.doc && e.docVersion === d.approval!.v && ledger.isLive(e))) return { reversed };
   const entry = dumpEntry(rec, ledger, { plant: ctx.plant, recordedOn: ctx.recordedOn, origin: 'reviewed-extraction', approvedBy: d.approval!.by, docVersion: d.approval!.v });
   return { posted: ledger.post(entry).id, reversed };
+}
+
+export type BookResult = ApproveResult & { posted?: string };
+
+/** Approve and book as one step: the booking is tried on a copy first; if the ledger refuses it,
+ *  the draft stays unapproved, the ledger is untouched, and the reason is returned. */
+export function approveAndBook(ledger: Ledger, d: Draft, by: string, at: string, ctx: { plant: Plant }): BookResult {
+  const r = approve(d, by, at, { ledger, plant: ctx.plant });
+  if (!r.ok || r.already) return r;
+  try {
+    syncDraft(ledger.clone(), r.draft, { plant: ctx.plant, recordedOn: at });
+  } catch (err) {
+    return { ok: false, draft: d, issues: [{ code: 'cannot-book', message: `Not approved: the ledger refused the entry (${(err as Error).message})` }] };
+  }
+  const s = syncDraft(ledger, r.draft, { plant: ctx.plant, recordedOn: at });
+  return { ...r, posted: s.posted };
 }

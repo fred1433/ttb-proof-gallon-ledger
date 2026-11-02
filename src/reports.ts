@@ -162,11 +162,12 @@ export function buildReports(ledger: Ledger, period: Period): Reports {
   const p26 = { ...pl('I', '26', 'c', [], ['9', '24', '25']), value: sum([p9.value, p24.value, p25.value]) };
   const p27 = pl('II', '27', 'b', balanceContributions(ledger, 'processing.bottled', f0));
   const p28 = pl('II', '28', 'b', contributionsFrom(ledger, month, (e, p) => e.kind === 'bottling' && p.account === 'processing.bottled'));
+  const p28c = { ...pl('II', '28', 'c', []), label: PROCESSING_LABELS['28']! }; // packaged: none in this prototype
   const p33 = pl('II', '33', 'b', contributionsFrom(ledger, month, (e, p) => e.kind === 'removal' && p.account === 'out.tax-determined'), undefined, 'REMOVAL_REGIME_EXPLICIT');
   const p46 = pl('II', '46', 'b', balanceContributions(ledger, 'processing.bottled', f1));
   const p31 = { ...pl('II', '31', 'b', [], ['27', '28']), value: add(p27.value, p28.value) };
   const p47 = { ...pl('II', '47', 'b', [], ['33', '46']), value: add(p33.value, p46.value) };
-  const processing = [p1, p2, p8, p9, p24, p25, p26, p27, p28, p31, p33, p46, p47];
+  const processing = [p1, p2, p8, p9, p24, p25, p26, p27, p28, p28c, p31, p33, p46, p47];
 
   // ---------- Part IV, lines 55/56 ----------
   // [PART_IV_B_FIRST_DUMP] (b): spirits received on line 2 and dumped to processing for the first time.

@@ -1,11 +1,12 @@
 // Every numeric or reporting rule the engine applies, with its source and the date
 // the source text was read. `kind: 'assumption'` marks a choice the sources do not
-// settle; those are the questions for a TTB compliance reviewer.
+// settle (questions for a TTB compliance reviewer); `kind: 'design'` marks an engineering
+// choice of this prototype that no regulation prescribes.
 // Test titles carry the rule id in brackets; tests/rules.test.ts fails if a rule has no test.
 
 export type Rule = {
   id: string;
-  kind: 'rule' | 'assumption';
+  kind: 'rule' | 'assumption' | 'design';
   statement: string;
   source: string;
   url: string;
@@ -23,7 +24,7 @@ export const RULES: readonly Rule[] = [
   {
     id: 'PROOF_TENTH', kind: 'rule', file: 'src/units.ts',
     statement: 'Proof is kept to the nearest tenth of a degree; a dropped digit of five or more adds a unit (half up, never half even).',
-    source: '27 CFR 30.31(a); rounding sentence at the end of 27 CFR 30.23', url: ECFR('30.23'), verified: V,
+    source: '27 CFR 30.31(a); the half-up sentence closes 27 CFR 30.23', url: ECFR('30.31'), verified: V,
   },
   {
     id: 'TABLE4_TENTH', kind: 'rule', file: 'src/units.ts',
@@ -53,7 +54,7 @@ export const RULES: readonly Rule[] = [
   {
     id: 'LEDGER_PG_TENTH', kind: 'assumption', file: 'src/units.ts',
     statement: 'Ledger quantities are proof gallons to the tenth; a case conversion (e.g. 21.402 PG) is rounded half up to the tenth on the record that creates it, and report lines in Parts I and II and on the 5110.11 add those tenths without further rounding.',
-    source: 'Neither form states a precision for these columns; tenths follow 27 CFR 30.64 and 30.71. To confirm with the reviewer.', url: ECFR('30.71'), verified: V,
+    source: '27 CFR 30.71 (tenth of a proof gallon), applied by analogy: neither form states a precision for these columns. To confirm with the reviewer.', url: ECFR('30.71'), verified: V,
   },
   {
     id: 'PART_IV_WHOLE_AFTER_SUM', kind: 'assumption', file: 'src/reports.ts',
@@ -113,7 +114,7 @@ export const RULES: readonly Rule[] = [
   {
     id: 'NO_BOTTLED_IN_BOND_INFERENCE', kind: 'rule', file: 'src/reports.ts',
     statement: 'A lot goes to Part IV column (e) only when its bottling record says bottled in bond; 100 proof never implies it.',
-    source: 'TTB F 5110.28 Part IV footnote 4 (standard of 27 CFR 5.42(b) as printed on the form, and labeling)', url: F511028, verified: V,
+    source: '27 CFR 5.88, the bottled in bond standard (the 03/2016 form still prints 5.42(b)); TTB F 5110.28 Part IV footnote 4', url: 'https://www.ecfr.gov/current/title-27/section-5.88', verified: V,
   },
   {
     id: 'REMOVAL_REGIME_EXPLICIT', kind: 'rule', file: 'src/events.ts',
@@ -121,9 +122,9 @@ export const RULES: readonly Rule[] = [
     source: 'TTB, Key changes to CBMA provisions: bottled spirits may move in bond between premises of the same person or controlled group, or back to the DSP that kept title', url: 'https://www.ttb.gov/news/cbma-key-changes', verified: V,
   },
   {
-    id: 'CORRECTION_BY_REVERSAL', kind: 'rule', file: 'src/ledger.ts',
-    statement: 'Entries are never edited. A correction posts the exact negative of the original, linked to it, then the right entry. It is never a reverse physical movement (processing cannot send spirits back to storage).',
-    source: '27 CFR 19.351(c)', url: ECFR('19.351'), verified: V,
+    id: 'CORRECTION_BY_REVERSAL', kind: 'design', file: 'src/ledger.ts',
+    statement: 'Design choice: entries are never edited. A correction posts the exact negative of the original, linked to it, then the right entry; it is never booked as a physical movement in the other direction.',
+    source: 'Design choice of this prototype, not a regulation. Related: 27 CFR 19.351(c) limits physical transfers from processing back to storage', url: ECFR('19.351'), verified: V,
   },
   {
     id: 'OPERATOR_OWN_RECORDS', kind: 'rule', file: 'src/reports.ts',
@@ -136,8 +137,8 @@ export const RULES: readonly Rule[] = [
     source: '27 CFR 19.620 and 19.621', url: ECFR('19.621'), verified: V,
   },
   {
-    id: 'APPROVED_VERSION_ONLY', kind: 'rule', file: 'src/review.ts',
-    statement: 'An entry from an extraction reaches the ledger only as the exact version a person approved. Missing required data blocks approval; any later edit withdraws it.',
+    id: 'APPROVED_VERSION_ONLY', kind: 'design', file: 'src/review.ts',
+    statement: 'An entry from an extraction reaches the ledger only as the exact version a person approved, and only if the ledger accepts it: approval and booking are one step. Missing or inconsistent data blocks approval; any later edit withdraws it.',
     source: 'Design rule of this prototype, matching the review requirement in the project brief', url: 'https://github.com/fred1433/ttb-proof-gallon-ledger/blob/main/src/review.ts', verified: V,
   },
 ];

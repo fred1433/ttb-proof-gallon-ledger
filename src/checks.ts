@@ -4,7 +4,7 @@
 //    document register, the consignor's transfer record, the month-end count, an expected month
 //    worked out by hand): these are the ones that catch a missing receipt or a wrong column.
 // A failing check never changes a figure. The draft is still shown, with what to examine.
-import { type Dec, dec, eq, sub, sum, toFixed, isZero } from './decimal.ts';
+import { type Dec, add, dec, eq, sub, sum, toFixed, isZero } from './decimal.ts';
 import { caseGauge, type CaseMethod } from './units.ts';
 import { type Plant } from './model.ts';
 import { Ledger } from './ledger.ts';
@@ -55,7 +55,13 @@ export function runChecks(i: {
   };
   pair('5110.28-l8-l26', 'CHECK_5110_28_L8_L26', '5110.28 Part I: line 8 equals line 26', '5110.28:8:c', '5110.28:26:c');
   pair('5110.28-l31-l47', 'CHECK_5110_28_L31_L47', '5110.28 Part II: line 31 equals line 47', '5110.28:31:b', '5110.28:47:b');
-  pair('5110.28-l9-l28', 'CHECK_L9_EQ_L28', '5110.28: line 9 equals line 28 (b) + (c)', '5110.28:9:c', '5110.28:28:b');
+  {
+    const l9 = L('5110.28:9:c');
+    const l28 = add(L('5110.28:28:b'), L('5110.28:28:c'));
+    const ok = eq(l9, l28);
+    out.push({ id: '5110.28-l9-l28', rule: 'CHECK_L9_EQ_L28', title: '5110.28: line 9 equals line 28 (b) + (c)', independent: false, pass: ok,
+      detail: `${f1(l9)} / ${f1(L('5110.28:28:b'))} + ${f1(L('5110.28:28:c'))}`, toExamine: ok ? [] : ['5110.28:9:c', '5110.28:28:b', '5110.28:28:c'] });
+  }
   const l17 = L('5110.11:17:m');
   const l2 = L('5110.28:2:c');
   out.push({ id: 'l17-l2', rule: 'CHECK_L17_IN_L2', title: '5110.11 line 17 equals 5110.28 line 2 (true in this scenario only)', independent: false, scenarioOnly: true,
@@ -86,9 +92,10 @@ export function runChecks(i: {
     const serialsOk = t.packages.length === rc.gauge.length && t.packages.every((p) => rc.gauge.some((g) => g.serial === p.serial));
     const booked = r.line('5110.11:2:m').contributions.filter((c) => c.doc === rc.id);
     const bookedPg = sum(booked.map((c) => c.pg));
-    const ok = serialsOk && eq(bookedPg, got);
+    // Any unexplained difference between shipped, received and booked needs a person.
+    const ok = serialsOk && eq(sent, got) && eq(bookedPg, got);
     out.push({ id: `transfer-${t.id}`, rule: 'RECEIPT_RECORD_FIELDS', title: `Transfer ${t.id}: consignor's record, receipt and ledger agree`, independent: true, pass: ok,
-      detail: `${t.packages.length} barrels shipped ${t.shippedOn}, ${rc.gauge.length} received ${rc.receivedOn}; ${f1(sent)} PG shipped, ${f1(got)} PG received, ${f1(bookedPg)} PG booked${eq(sent, got) ? '' : `; difference ${f1(sub(got, sent))} PG to explain on the transfer record`}`,
+      detail: `${t.packages.length} barrels shipped ${t.shippedOn}, ${rc.gauge.length} received ${rc.receivedOn}; ${f1(sent)} PG shipped, ${f1(got)} PG received, ${f1(bookedPg)} PG booked${eq(sent, got) ? '' : `; difference ${f1(sub(got, sent))} PG between shipped and received, to explain on the transfer record`}${eq(bookedPg, got) ? '' : `; booked differs from received by ${f1(sub(bookedPg, got))} PG`}`,
       toExamine: ok ? [] : [t.id, rc.id] });
   }
 

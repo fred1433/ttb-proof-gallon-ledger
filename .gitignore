@@ -1,0 +1,6 @@
+node_modules/
+site/js/
+.wrangler/
+captures/
+.DS_Store
+.env*

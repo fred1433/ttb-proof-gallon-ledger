@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proof-Gallon Ledger Review</title>
+<meta name="description" content="A double-entry proof-gallon ledger closing one fictional month at a Louisville bottling plant, with draft TTB 5110.11 and 5110.28 review worksheets traced to their records.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam&family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/page.css">
+</head>
+<body>
+<div class="banner">
+  <span><strong>Fictional data · Draft review worksheet</strong>&nbsp; Nothing on this page is filed or sent anywhere.</span>
+  <span id="built">Computed in your browser</span>
+</div>
+
+<main>
+  <div class="wrap">
+    <header class="intro">
+      <h1>One bottling month, from barrel to draft report</h1>
+      <div class="cols2">
+      <p>A working proof-gallon ledger for an invented Louisville bottling plant: two private-label clients and a house label, four barrels received in bond, two dumps, a 90 proof bottling run, and bottles leaving tax determined. The draft 5110.11 and 5110.28 below are computed in your browser from the ledger's entries.</p>
+      <p>Click any figure to see what it is made of. One gauge sheet is still waiting for review: until someone approves it, it stays out of every line.</p>
+      </div>
+    </header>
+
+    <section class="bench" aria-label="October 2026 draft review worksheet">
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="spread" id="spread"><p style="padding:24px">This worksheet needs JavaScript: the figures are computed in the page.</p></div>
+      <aside class="inspector" id="inspector" aria-label="Inspector"></aside>
+    </section>
+  </div>
+
+  <section class="zone" id="checks">
+    <div class="wrap">
+      <h2>Checks and assumptions</h2>
+      <p class="lead">The form totals prove the draft adds up. The other checks compare it with things the ledger did not produce: last month as filed, the plant's register of records, the consignor's transfer record, the month-end count, and the same month worked out by hand. That is how an unreviewed gauge sheet shows up, and why a balanced draft is not yet a correct one.</p>
+      <div class="cols">
+        <div>
+          <h3 class="side" id="checks-title">Checks on the current draft</h3>
+          <ol class="checks" id="checklist"></ol>
+        </div>
+        <div>
+          <h3 class="side">Rounding, operation by operation</h3>
+          <table class="policy" id="policy"><thead><tr><th>Operation</th><th>Rule applied</th></tr></thead><tbody></tbody></table>
+          <h3 class="side">Assumptions to confirm with your TTB reviewer</h3>
+          <ul class="plain" id="assumptions"></ul>
+          <h3 class="side">Not in this month</h3>
+          <ul class="plain">
+            <li>Production account and TTB F 5110.40: no distilling in this scenario. That is a limit of the demo, not a view of what your plant needs.</li>
+            <li>TTB F 5000.24 and any tax figure; Kentucky reports; exports; imported, Puerto Rican or Virgin Islands spirits.</li>
+            <li>Bottled spirits moving in bond (allowed in some cases since the CBMA changes): every removal here is tax determined, because its record says so.</li>
+            <li>Alternating proprietorship: one operator's report never reads another's entries, and a test proves it, but the workflow itself is not built.</li>
+            <li>Raw gauge readings (hydrometer, Tables 1, 4 and 7, obscuration): the gauge sheet starts from quantities the gauger already determined.</li>
+            <li>DistillX5 or Whiskey Systems imports, PDF export, users and permissions, storage, filing. A small generic CSV migration lives in the repository's tests.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="zone" id="code">
+    <div class="wrap">
+      <h2>The code and a next step</h2>
+      <div class="code-grid">
+        <div class="repo">
+          <div class="url"><a href="https://github.com/fred1433/ttb-proof-gallon-ledger">github.com/fred1433/ttb-proof-gallon-ledger</a></div>
+          <dl>
+            <dt>Serving now</dt><dd id="commit">the build stamped in js/app.js</dd>
+            <dt>Run the checks</dt><dd><code>npm ci &amp;&amp; npm run check</code></dd>
+            <dt>Inside</dt><dd>TypeScript with no runtime dependency; exact decimal arithmetic on integers, never floats; an append-only ledger where every entry sums to zero; <span id="testcount">tests</span> on rounding, conversions, reversals, separation between clients and operators, review and migration; CI on every push.</dd>
+            <dt>Same code</dt><dd>This page runs the bundle CI builds and tests. Nothing on it is a pasted figure.</dd>
+          </dl>
+        </div>
+        <div class="milestone">
+          <h3 class="side">A first milestone</h3>
+          <p>One representative month of yours, agreed with your TTB reviewer: the source records, the figures expected on each line, the record-to-line mapping and the acceptance criteria, then this engine passing them.</p>
+          <p class="note">The README answers how transactions, client separation, migration and AI-extracted entries are handled, each pointing to the test that proves it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Built by Frederic de Lavenne de Choulot, The AI Pipe. Everything here is fictional: the plant, the distilleries, the clients and every record. Line numbers and labels come from TTB F 5110.11 (01/2009) and TTB F 5110.28 (03/2016); the rules were read on eCFR, ttb.gov and the Pay.gov form help on November 2, 2026. The gauge sheet extraction was recorded offline and is replayed here; no AI model runs on this page.</p>
+    <p class="cal">Walk through it together: <a href="https://cal.theaipipe.com">cal.theaipipe.com</a>, 15 minutes.</p>
+  </div>
+</footer>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="smear" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter>
+  </defs>
+  <symbol id="gauge-sheet" viewBox="0 0 760 520">
+    <rect width="760" height="520" fill="#FFFEF8"/>
+    <g font-family="Public Sans, Arial, sans-serif" fill="#3A4757">
+      <text x="40" y="46" font-size="22" font-weight="700" letter-spacing="1.5">DUMP GAUGE RECORD</text>
+      <text x="40" y="68" font-size="12">Fictional Bottling Co.   Plant DSP-KY-00000 (fictional)   Storage to processing</text>
+      <text x="720" y="46" text-anchor="end" font-size="14" font-weight="600">No. DR-1028</text>
+      <text x="40" y="114" font-size="12">Date</text>
+      <text x="250" y="114" font-size="12">Lot</text>
+      <text x="400" y="114" font-size="12">Dumped to</text>
+      <text x="612" y="114" font-size="12">Gauger</text>
+      <text x="52" y="187" font-size="13" font-weight="600">Barrel serial</text>
+      <text x="232" y="187" font-size="13" font-weight="600">Proof</text>
+      <text x="372" y="187" font-size="13" font-weight="600">Wine gal.</text>
+      <text x="542" y="187" font-size="13" font-weight="600">Proof gal.</text>
+      <text x="52" y="382" font-size="13" font-weight="600">Total</text>
+      <text x="40" y="456" font-size="12">Gauger's signature</text>
+      <text x="720" y="500" text-anchor="end" font-size="10.5" fill="#8A929B">Fictional record drawn for a demo. Not a TTB form.</text>
+    </g>
+    <g stroke="#3A4757" fill="none">
+      <path d="M80 119H232M280 119H392M466 119H602M662 119H722" stroke-width="0.8"/>
+      <rect x="40" y="160" width="680" height="240" stroke-width="1.2"/>
+      <path d="M40 200H720M40 250H720M40 300H720M40 350H720M40 354H720M220 160V400M360 160V400M530 160V400" stroke-width="0.8"/>
+      <path d="M160 460H420" stroke-width="0.8"/>
+    </g>
+    <g font-family="Kalam, cursive" fill="#27408B" font-size="25">
+      <text x="88" y="114" transform="rotate(-1.5 88 114)">10/28/26</text>
+      <text x="286" y="113">B-1028</text>
+      <text x="470" y="113" transform="rotate(-1 470 113)">Proc. tank 2</text>
+      <text x="668" y="113">R.T.</text>
+      <text x="58" y="235">B-301</text>
+      <text x="246" y="235">117.4</text>
+      <text x="398" y="235">41.0</text>
+      <text x="576" y="236">48.1</text>
+      <text x="58" y="286">B-302</text>
+      <text x="246" y="287" transform="rotate(-2 246 287)">117.0</text>
+      <text x="398" y="286">40.1</text>
+      <text x="556" y="290" font-size="23">48.9</text>
+      <text x="636" y="270" font-size="21" transform="rotate(-4 636 270)">46.9</text>
+      <text x="692" y="286" font-size="13">RT</text>
+      <text x="396" y="386">81.1</text>
+      <text x="574" y="386">95.0</text>
+      <text x="178" y="455" font-size="27" transform="rotate(-3 178 455)">R. T.</text>
+    </g>
+    <path d="M552 282L606 272" stroke="#27408B" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="282" cy="276" rx="32" ry="12" fill="#27408B" opacity=".42" filter="url(#smear)"/>
+    <ellipse cx="270" cy="281" rx="12" ry="7" fill="#27408B" opacity=".38" filter="url(#smear)"/>
+  </symbol>
+</svg>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

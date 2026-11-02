@@ -1,0 +1,14 @@
+{
+  "_note": "Everything in this folder is fictional. No real plant, distillery, brand or customer.",
+  "operator": "DSP-KY-00000",
+  "plantNumber": "DSP-KY-00000",
+  "name": "Fictional Bottling Co.",
+  "location": "Louisville, Kentucky (fictional plant)",
+  "titleHolder": "Fictional Bottling Co.",
+  "clients": [
+    { "id": "client-a", "name": "Client A", "note": "Fictional restaurant group. Buys the bottled output of three barrels; bottles leave tax determined." },
+    { "id": "client-b", "name": "Client B", "note": "Fictional bourbon society. Two barrels dumped on October 28 for a later bottling." },
+    { "id": "house", "name": "House label", "note": "The plant's own label." }
+  ],
+  "ownership": "In this scenario the plant holds title to every spirit in bond. Clients buy finished bottles after tax determination; their name on a lot is a commercial allocation, not ownership."
+}

@@ -1,0 +1,9 @@
+{
+  "_note": "Physical count on October 31, 2026 (fictional): barrels found full in the warehouse, cases on the finished goods floor.",
+  "date": "2026-10-31",
+  "fullBarrels": ["H-101", "H-102", "H-111", "H-112", "H-113", "H-114"],
+  "cases": [
+    { "lot": "A-1009", "cases": 21, "bottlesPerCase": 12, "bottleMl": 750, "proof": "90.0", "method": "after-multiplying" },
+    { "lot": "H-0925", "cases": 14, "bottlesPerCase": 12, "bottleMl": 750, "proof": "100.0", "method": "after-multiplying" }
+  ]
+}

@@ -1,0 +1,8 @@
+# Fictional spreadsheet export of barrels in storage, for tests/migration.test.ts
+barrel,client,quantity,unit,proof,received_on,distillation_proof
+K-501,house,48.6,PG,112.4,2023-03-02,128.0
+K-502,house,47.9,proof gallons,111.8,2023-03-02,128.0
+K-502,house,47.9,proof gallons,111.8,2023-03-02,128.0
+K-503,client-a,49.3,,113.0,2023-04-10,128.0
+K-504,client-b,41.2,WG,112.6,2023-04-10,128.0
+K-505,client-b,50.2,PG,112.6,2023-04-10,128.0

@@ -1,0 +1,193 @@
+{
+ "_note": "Frozen extraction of the fictional gauge sheet site/img/gauge-sheet-DR-1028.svg.",
+ "doc": "DR-1028",
+ "kind": "dump-gauge",
+ "image": "img/gauge-sheet-DR-1028.svg",
+ "extractedOn": "2026-11-02",
+ "how": "Recorded once, offline, in the form the extraction step returns; the page replays this record and calls no model.",
+ "seeded": "Row B-302 is wrong on purpose: the proof is left blank and the proof gallons are the struck-out figure, so the review path can be walked through.",
+ "fields": [
+  {
+   "key": "date",
+   "value": "2026-10-28",
+   "confidence": 0.97,
+   "box": [
+    80,
+    84,
+    150,
+    44
+   ],
+   "note": "written 10/28/26"
+  },
+  {
+   "key": "lot",
+   "value": "B-1028",
+   "confidence": 0.95,
+   "box": [
+    286,
+    84,
+    118,
+    44
+   ]
+  },
+  {
+   "key": "tank",
+   "value": "Processing tank 2",
+   "confidence": 0.9,
+   "box": [
+    470,
+    84,
+    150,
+    44
+   ],
+   "note": "written Proc. tank 2"
+  },
+  {
+   "key": "gauger",
+   "value": "R.T.",
+   "confidence": 0.88,
+   "box": [
+    640,
+    84,
+    90,
+    44
+   ]
+  },
+  {
+   "key": "unit.wg",
+   "value": "wine gallons",
+   "confidence": 0.99,
+   "box": [
+    360,
+    160,
+    170,
+    40
+   ],
+   "note": "column heading Wine gal."
+  },
+  {
+   "key": "unit.pg",
+   "value": "proof gallons",
+   "confidence": 0.99,
+   "box": [
+    530,
+    160,
+    190,
+    40
+   ],
+   "note": "column heading Proof gal."
+  },
+  {
+   "key": "rows.0.serial",
+   "value": "B-301",
+   "confidence": 0.96,
+   "box": [
+    40,
+    200,
+    180,
+    50
+   ]
+  },
+  {
+   "key": "rows.0.proof",
+   "value": "117.4",
+   "confidence": 0.93,
+   "box": [
+    220,
+    200,
+    140,
+    50
+   ]
+  },
+  {
+   "key": "rows.0.wg",
+   "value": "41.0",
+   "confidence": 0.94,
+   "box": [
+    360,
+    200,
+    170,
+    50
+   ]
+  },
+  {
+   "key": "rows.0.pg",
+   "value": "48.1",
+   "confidence": 0.94,
+   "box": [
+    530,
+    200,
+    190,
+    50
+   ]
+  },
+  {
+   "key": "rows.1.serial",
+   "value": "B-302",
+   "confidence": 0.95,
+   "box": [
+    40,
+    250,
+    180,
+    50
+   ]
+  },
+  {
+   "key": "rows.1.proof",
+   "value": null,
+   "confidence": 0.31,
+   "box": [
+    220,
+    250,
+    140,
+    50
+   ],
+   "note": "ink smear over the figure"
+  },
+  {
+   "key": "rows.1.wg",
+   "value": "40.1",
+   "confidence": 0.92,
+   "box": [
+    360,
+    250,
+    170,
+    50
+   ]
+  },
+  {
+   "key": "rows.1.pg",
+   "value": "48.9",
+   "confidence": 0.62,
+   "box": [
+    530,
+    236,
+    190,
+    64
+   ],
+   "note": "two figures in the cell"
+  },
+  {
+   "key": "total.wg",
+   "value": "81.1",
+   "confidence": 0.9,
+   "box": [
+    360,
+    350,
+    170,
+    50
+   ]
+  },
+  {
+   "key": "total.pg",
+   "value": "95.0",
+   "confidence": 0.9,
+   "box": [
+    530,
+    350,
+    190,
+    50
+   ]
+  }
+ ]
+}

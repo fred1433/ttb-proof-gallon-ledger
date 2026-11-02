@@ -1,0 +1,75 @@
+{
+  "_note": "Fictional source records for October 2026. Plant numbers ending in 0000x and form serials starting FICT are invented.",
+  "period": { "from": "2026-10-01", "to": "2026-10-31" },
+  "opening": {
+    "id": "OB-0930",
+    "date": "2026-09-30",
+    "source": "September 2026 closing positions (barrel register and finished goods count)",
+    "barrels": [
+      { "serial": "A-201", "client": "client-a", "pg": "49.2", "distilledAtProof": "135.0", "receivedOn": "2024-05-21", "from": "DSP-KY-00001 (fictional)" },
+      { "serial": "A-202", "client": "client-a", "pg": "47.9", "distilledAtProof": "135.0", "receivedOn": "2024-05-21", "from": "DSP-KY-00001 (fictional)" },
+      { "serial": "A-203", "client": "client-a", "pg": "48.8", "distilledAtProof": "135.0", "receivedOn": "2024-05-21", "from": "DSP-KY-00001 (fictional)" },
+      { "serial": "B-301", "client": "client-b", "pg": "52.6", "distilledAtProof": "130.0", "receivedOn": "2025-02-11", "from": "DSP-IN-00001 (fictional)" },
+      { "serial": "B-302", "client": "client-b", "pg": "51.3", "distilledAtProof": "130.0", "receivedOn": "2025-02-11", "from": "DSP-IN-00001 (fictional)" },
+      { "serial": "H-101", "client": "house", "pg": "47.6", "distilledAtProof": "128.0", "receivedOn": "2025-06-03", "from": "DSP-KY-00001 (fictional)" },
+      { "serial": "H-102", "client": "house", "pg": "48.3", "distilledAtProof": "128.0", "receivedOn": "2025-06-03", "from": "DSP-KY-00001 (fictional)" }
+    ],
+    "bottled": [
+      { "lot": "H-0925", "client": "house", "cases": 24, "bottlesPerCase": 12, "bottleMl": 750, "proof": "100.0", "distilledAtProof": "128.0", "method": "after-multiplying" }
+    ]
+  },
+  "transfers": [
+    {
+      "transfer": {
+        "id": "TR-0457",
+        "form5100_16": { "serial": "FICT-0112", "date": "2026-08-14" },
+        "consignor": { "name": "Kentucky distillery (fictional)", "plant": "DSP-KY-00001" },
+        "consignee": { "name": "Fictional Bottling Co.", "plant": "DSP-KY-00000" },
+        "accountRemovedFrom": "storage",
+        "shippedOn": "2026-10-05",
+        "packages": [
+          { "serial": "H-111", "client": "house", "pg": "51.4", "proof": "118.2", "wg": "43.5", "distilledAtProof": "132.0" },
+          { "serial": "H-112", "client": "house", "pg": "50.7", "proof": "117.6", "wg": "43.1", "distilledAtProof": "132.0" },
+          { "serial": "H-113", "client": "house", "pg": "52.1", "proof": "118.9", "wg": "43.8", "distilledAtProof": "132.0" },
+          { "serial": "H-114", "client": "house", "pg": "49.8", "proof": "117.2", "wg": "42.5", "distilledAtProof": "132.0" }
+        ]
+      },
+      "receipt": {
+        "id": "RC-1006",
+        "transfer": "TR-0457",
+        "receivedOn": "2026-10-06",
+        "sealsIntact": true,
+        "accountDeposited": "storage",
+        "signedBy": "Receiving clerk (fictional)",
+        "gauge": [
+          { "serial": "H-111", "pg": "51.4", "proof": "118.2", "wg": "43.5" },
+          { "serial": "H-112", "pg": "50.7", "proof": "117.6", "wg": "43.1" },
+          { "serial": "H-113", "pg": "52.1", "proof": "118.9", "wg": "43.8" },
+          { "serial": "H-114", "pg": "49.8", "proof": "117.2", "wg": "42.5" }
+        ]
+      }
+    }
+  ],
+  "dumps": [
+    {
+      "id": "DR-1009", "date": "2026-10-09", "lot": "A-1009", "tank": "Processing tank 1", "gauger": "R.T.",
+      "barrels": [
+        { "serial": "A-201", "proof": "114.4", "wg": "38.7", "pg": "44.3" },
+        { "serial": "A-202", "proof": "114.8", "wg": "37.5", "pg": "43.1" },
+        { "serial": "A-203", "proof": "114.6", "wg": "38.4", "pg": "44.0" }
+      ]
+    }
+  ],
+  "tankGauges": [
+    { "id": "BT-1010", "date": "2026-10-10", "lot": "A-1009", "tank": "Processing tank 1", "before": { "wg": "114.6", "proof": "114.7" }, "after": { "wg": "146.0", "proof": "90.0" }, "pg": "131.4" }
+  ],
+  "bottlings": [
+    { "id": "BR-1012", "date": "2026-10-12", "lot": "A-1009", "cases": 61, "bottlesPerCase": 12, "bottleMl": 750, "proof": "90.0", "method": "after-multiplying", "bottledInBond": false, "forExport": false, "label": "Client A private label" }
+  ],
+  "removals": [
+    { "id": "RM-1015", "version": 1, "date": "2026-10-15", "lot": "A-1009", "cases": 40, "bottlesPerCase": 12, "bottleMl": 750, "proof": "90.0", "method": "after-multiplying", "regime": "tax-determined", "invoice": "INV-3318", "recordedOn": "2026-10-15" },
+    { "id": "RM-1020", "version": 1, "date": "2026-10-20", "lot": "H-0925", "cases": 12, "bottlesPerCase": 12, "bottleMl": 750, "proof": "100.0", "method": "after-multiplying", "regime": "tax-determined", "invoice": "INV-3324", "recordedOn": "2026-10-20" },
+    { "id": "RM-1020", "version": 2, "date": "2026-10-20", "lot": "H-0925", "cases": 10, "bottlesPerCase": 12, "bottleMl": 750, "proof": "100.0", "method": "after-multiplying", "regime": "tax-determined", "invoice": "INV-3324", "recordedOn": "2026-10-21",
+      "corrects": { "version": 1, "reason": "case count keyed as 12; the removal record and invoice INV-3324 show 10" } }
+  ]
+}

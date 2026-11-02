@@ -1,0 +1,23 @@
+{
+  "name": "ttb-proof-gallon-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A double-entry proof-gallon ledger with draft TTB 5110.11 / 5110.28 review worksheets, on one fictional month.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "check": "npm run typecheck && npm run build && npm test",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "node scripts/build.mjs",
+    "test": "node --test --test-reporter=spec tests/*.test.ts"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "fast-check": "4.10.2",
+    "typescript": "5.9.3",
+    "@types/node": "24.19.2"
+  }
+}

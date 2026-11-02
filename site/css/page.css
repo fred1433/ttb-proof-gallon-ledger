@@ -251,7 +251,9 @@ footer p { margin: 0 0 8px; max-width: 80ch; }
 footer .cal { font: 600 17px/1.4 var(--serif); color: var(--ink); }
 
 /* ---------- small screens ---------- */
+a.back { display: none; }
 @media (max-width: 1080px) {
+  a.back { display: inline-block; margin-top: 8px; font: 600 14px var(--sans); }
   .bench { grid-template-columns: minmax(0, 1fr); }
   .inspector { position: static; max-height: none; overflow: visible; }
 }

@@ -79,7 +79,7 @@ function renderStatic() {
   const c = __COMMIT__;
   const short = c.slice(0, 7);
   $('built').innerHTML = `Built from commit <a href="${REPO}/commit/${esc(c.replace(/-dirty$/, ''))}">${esc(short)}</a>${c.endsWith('-dirty') ? ' (uncommitted)' : ''}`;
-  $('commit').innerHTML = `commit <a href="${REPO}/commit/${esc(c.replace(/-dirty$/, ''))}">${esc(short)}</a>, the same build CI tested`;
+  $('commit').innerHTML = `commit <a href="${REPO}/commit/${esc(c.replace(/-dirty$/, ''))}">${esc(short)}</a>, tested in CI`;
   $('testcount').textContent = __TESTS__;
   const ops: [string, string][] = [
     ['PROOF_TENTH', 'Proof'],
@@ -210,7 +210,7 @@ function renderInspector() {
   const tabs: [Tab, string][] = [['trace', 'Trace a figure'], ['review', 'Review'], ['statements', 'Clients']];
   const head = `<div class="tabs" role="tablist">${tabs.map(([t, n]) => `<button role="tab" data-act="tab" data-tab="${t}" aria-selected="${S.tab === t}">${esc(n)}${t === 'review' && waiting ? '<span class="count">1</span>' : ''}</button>`).join('')}</div>`;
   const body = S.tab === 'trace' ? tracePanel() : S.tab === 'review' ? reviewPanel() : statementsPanel();
-  $('inspector').innerHTML = head + `<div class="panel" role="tabpanel">${body}</div>`;
+  $('inspector').innerHTML = head + `<div class="panel" role="tabpanel">${body}</div><a class="back" href="#spread">Back to the worksheet</a>`;
 }
 
 // ---------- trace ----------

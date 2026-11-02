@@ -28,12 +28,12 @@ test('rounding is symmetric, so a reversal rounds to the exact negative', () => 
   fc.assert(fc.property(fc.bigInt({ min: -(10n ** 12n), max: 10n ** 12n }), fc.integer({ min: 0, max: 6 }), fc.integer({ min: 0, max: 4 }), (u, s, places) => {
     const x = { u, s };
     return eq(roundHalfUp(neg(x), places), neg(roundHalfUp(x, places)));
-  }));
+  }), { numRuns: 500 });
 });
 
 test('addition is exact: (a + b) - b = a, and sums do not depend on order', () => {
   const d = fc.record({ u: fc.bigInt({ min: -(10n ** 9n), max: 10n ** 9n }), s: fc.integer({ min: 0, max: 4 }) });
-  fc.assert(fc.property(d, d, d, (a, b, c) => eq(sub(add(a, b), b), a) && eq(add(add(a, b), c), add(a, add(b, c)))));
+  fc.assert(fc.property(d, d, d, (a, b, c) => eq(sub(add(a, b), b), a) && eq(add(add(a, b), c), add(a, add(b, c)))), { numRuns: 500 });
 });
 
 test('display never rounds silently', () => {
